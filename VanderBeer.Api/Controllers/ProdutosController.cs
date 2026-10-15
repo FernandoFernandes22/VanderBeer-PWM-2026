@@ -1,0 +1,10 @@
+using Microsoft.AspNetCore.Mvc; using Microsoft.EntityFrameworkCore; using VanderBeer.Api.Data; using VanderBeer.Api.DTOs; using VanderBeer.Api.Models;
+namespace VanderBeer.Api.Controllers;
+[ApiController,Route("api/[controller]")] public class ProdutosController(VanderBeerDbContext db):ControllerBase {
+ [HttpGet] public async Task<ActionResult> Listar(int? categoriaId,bool somenteAtivos=true){var q=db.Produtos.AsNoTracking().Include(x=>x.Categoria).AsQueryable();if(somenteAtivos)q=q.Where(x=>x.Ativo);if(categoriaId.HasValue)q=q.Where(x=>x.CategoriaId==categoriaId);return Ok(await q.OrderBy(x=>x.Nome).Select(x=>new{x.Id,x.Nome,x.Descricao,x.Preco,x.Estoque,x.ImagemUrl,x.Ativo,x.CategoriaId,Categoria=x.Categoria!.Nome}).ToListAsync());}
+ [HttpGet("{id:int}")] public async Task<ActionResult> Obter(int id){var x=await db.Produtos.AsNoTracking().Where(x=>x.Id==id).Select(x=>new{x.Id,x.Nome,x.Descricao,x.Preco,x.Estoque,x.ImagemUrl,x.Ativo,x.CategoriaId,Categoria=x.Categoria!.Nome}).FirstOrDefaultAsync();return x is null?NotFound():Ok(x);}
+ [HttpPost] public async Task<ActionResult> Criar(ProdutoDto dto){if(!await db.Categorias.AnyAsync(x=>x.Id==dto.CategoriaId))return BadRequest(new{mensagem="Categoria não encontrada."});var x=Mapear(new Produto(),dto);db.Add(x);await db.SaveChangesAsync();return CreatedAtAction(nameof(Obter),new{id=x.Id},x);}
+ [HttpPut("{id:int}")] public async Task<IActionResult> Atualizar(int id,ProdutoDto dto){var x=await db.Produtos.FindAsync(id);if(x is null)return NotFound();if(!await db.Categorias.AnyAsync(c=>c.Id==dto.CategoriaId))return BadRequest(new{mensagem="Categoria não encontrada."});Mapear(x,dto);await db.SaveChangesAsync();return NoContent();}
+ [HttpDelete("{id:int}")] public async Task<IActionResult> Excluir(int id){var x=await db.Produtos.FindAsync(id);if(x is null)return NotFound();x.Ativo=false;await db.SaveChangesAsync();return NoContent();}
+ static Produto Mapear(Produto x,ProdutoDto d){x.Nome=d.Nome.Trim();x.Descricao=d.Descricao?.Trim();x.Preco=d.Preco;x.Estoque=d.Estoque;x.ImagemUrl=d.ImagemUrl?.Trim();x.Ativo=d.Ativo;x.CategoriaId=d.CategoriaId;return x;}
+}

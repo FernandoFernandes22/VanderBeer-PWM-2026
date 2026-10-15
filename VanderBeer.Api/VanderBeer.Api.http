@@ -1,0 +1,6 @@
+@VanderBeer.Api_HostAddress = http://localhost:5162
+
+GET {{VanderBeer.Api_HostAddress}}/api/produtos
+Accept: application/json
+
+###

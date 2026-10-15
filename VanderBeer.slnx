@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="VanderBeer.Api/VanderBeer.Api.csproj" />
+  <Project Path="VanderBeer.Api.Tests/VanderBeer.Api.Tests.csproj" />
+  <Project Path="VanderBeer.App/VanderBeer.App.csproj" />
+</Solution>
